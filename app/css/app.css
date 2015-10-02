@@ -1,0 +1,34 @@
+html,body{
+  height:100%;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;     
+} 
+    
+.full-height{
+  height:100%;
+}
+        
+.left-panel{
+  padding-top:10px;
+  position:relative;
+  padding-bottom:100px;
+}
+    
+.left-panel-content{
+  height: 100%;      
+  overflow-y: auto;      
+}
+    
+.left-panel-bottom{
+  position:absolute;
+  bottom:0px;
+}
+
+.btn-right{
+  display:block;
+  position:absolute;
+  right:10px;top:50%;
+  margin-top:-10px;
+}
