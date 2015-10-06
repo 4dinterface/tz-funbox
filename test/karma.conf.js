@@ -11,7 +11,7 @@ module.exports = function(config){
     ],
 
     autoWatch : true,
-
+    
     frameworks: ['jasmine'],
 
     browsers : ['Chrome', 'Firefox'],
@@ -25,7 +25,9 @@ module.exports = function(config){
     junitReporter : {
       outputFile: 'test_out/unit.xml',
       suite: 'unit'
-    }
+    },
+    
+    colors: true,    
 
   });
 };

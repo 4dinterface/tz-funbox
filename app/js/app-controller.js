@@ -1,23 +1,40 @@
 'use strict';
 var app = angular.module('mapApp', ['mapComponent', 'ngSortable']);
 
-app.controller('AppCtrl', function ($scope, $element) {
+app.controller('AppCtrl', function ($scope) {
 
   /** точки маршрута **/
-  $scope.wayPoints = [];
+  this.wayPoints = [];
 
   /** активность режима пути **/
-  $scope.modePath = false;
+  this.modePath = false;
+
+  /**
+   * добавит точку маршруту 
+   * @param {string} value - аддресс точки маршрута
+   */
+  this.addWayPoint = function (value) {
+    if (value.replace(/ /g, "") == "") return;
+    this.wayPoints.push({
+      address: value
+    });
+  };
+
+  /**
+   * удалит точку по порядковому номеру
+   * @param {event} $event
+   */
+  this.removeWayPoint = function (index) {
+    this.wayPoints.splice(index, 1);
+  };
 
   /**
    * обработчик нажатия enter
    * @param {event} $event
    */
-  $scope.keyDown = function ($event) {
+  this.keyDown = function ($event) {
     if ($event.keyCode == 13) {
-      if ($event.target.value.replace(/ /g, "") !== "") $scope.wayPoints.push({
-        address: $event.target.value
-      });
+      this.addWayPoint($event.target.value);
       $event.target.value = "";
       $event.preventDefault();
     };
@@ -28,8 +45,8 @@ app.controller('AppCtrl', function ($scope, $element) {
    * @param {number} index
    * @param {event} $event   
    */
-  $scope.remove = function (index, $event) {
-    $scope.wayPoints.splice(index, 1);
+  this.remove = function (index, $event) {
+    this.removeWayPoint(index);
     $event.stopPropagation();
   };
 });

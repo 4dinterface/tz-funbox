@@ -142,6 +142,11 @@ var MapComponent = (function () {
         if (this.$scope.modePath) this.renderRoute(wayPoints, coordinates);else this.renderPolyline(wayPoints, coordinates);
       }
     }
+
+    /**
+     * отрисовывает все точки
+     * @param wayPoints - массмив точек
+     */
   }, {
     key: "renderPoints",
     value: function renderPoints(wayPoints) {
@@ -155,6 +160,11 @@ var MapComponent = (function () {
         this.collection.add(placeMark);
       }
     }
+
+    /**
+     * отрисовывает ломаные
+     * @param wayPoints - массмив точек
+     */
   }, {
     key: "renderPolyline",
     value: function renderPolyline(wayPoints, coordinates) {
@@ -166,6 +176,12 @@ var MapComponent = (function () {
       });
       this.map.geoObjects.add(this.polyline);
     }
+
+    /**
+     * отрисовывает путь
+     * @param wayPoints - массмив точек
+     * @param coordinates - массив координат  
+     */
   }, {
     key: "renderRoute",
     value: function renderRoute(wayPoints, coordinates) {
@@ -175,7 +191,7 @@ var MapComponent = (function () {
         _this3.path = route.getPaths();
 
         _this3.path.options.set({
-          strokeColor: '#FF0000',
+          strokeColor: '#00FF00',
           strokeWidth: 2
         });
         _this3.map.geoObjects.add(_this3.path);

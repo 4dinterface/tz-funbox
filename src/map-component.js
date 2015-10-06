@@ -118,7 +118,11 @@ class MapComponent {
       else this.renderPolyline(wayPoints, coordinates);
     }
   }
-
+  
+  /**
+   * отрисовывает все точки
+   * @param wayPoints - массмив точек
+   */
   renderPoints(wayPoints) {
     for (let i = 0; i < wayPoints.length; i++) {
       let placeMark = new ymaps.Placemark(wayPoints[i].coordinates, {
@@ -130,7 +134,11 @@ class MapComponent {
       this.collection.add(placeMark);
     }
   }
-
+  
+  /**
+   * отрисовывает ломаные
+   * @param wayPoints - массмив точек
+   */
   renderPolyline(wayPoints, coordinates) {
     this.polyline = new ymaps.Polyline(coordinates);
     this.polyline.options.set({
@@ -141,7 +149,11 @@ class MapComponent {
     this.map.geoObjects.add(this.polyline);
   }
 
-
+  /**
+   * отрисовывает путь
+   * @param wayPoints - массмив точек
+   * @param coordinates - массив координат  
+   */
   renderRoute(wayPoints, coordinates) {
     ymaps.route(coordinates).then((route) => {
       this.path = route.getPaths();

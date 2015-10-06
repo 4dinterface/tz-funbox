@@ -8,6 +8,7 @@
   <script src="bower_components/jquery/dist/jquery.min.js"></script>  
   <script src="bower_components/angular/angular.min.js" type="text/javascript"></script>
   
+  <script src="js/polyfills.js"></script>  
   <script src="js/ng-sortable.js"></script>
   <script src="js/map-component.js"></script>
   <script src="js/app-controller.js"></script>
@@ -18,7 +19,7 @@
   <link rel="stylesheet" href="css/app.css">  
 </head>
   
-<body ng-controller="AppCtrl">
+<body ng-controller="AppCtrl as appCtrl">
   
   <div class="container-fluid wrapper full-height">
     
@@ -27,17 +28,17 @@
           
           <div class="row">
             <div class="col-md-12 form-group">
-              <input ng-keydown="keyDown($event)" id="address-input" class="form-control" placeholder="введите адрес"> 
+              <input ng-keydown="appCtrl.keyDown($event)" id="address-input" class="form-control" placeholder="введите адрес"> 
             </div>        
           </div>
           
           <div class="row left-panel-content">
             <div class="col-md-12">
-              <ul class="list-group" ng-mousedown2="mouseDown($event)" id="address-list" ng-sortable="wayPoints">
-                <li class="list-group-item clearfix"  ng-class="{'alert alert-danger': !point.goodAddress}"  ng-repeat="point in wayPoints track by $index" index="{{$index}}" > 
+              <ul class="list-group" id="address-list" ng-sortable="appCtrl.wayPoints">
+                <li class="list-group-item clearfix"  ng-class="{'alert alert-danger': !point.goodAddress}"  ng-repeat="point in appCtrl.wayPoints track by $index" index="{{$index}}" > 
                   <div style="padding-right:40px;"> {{point.address}} </div>
                   
-                  <span  class="btn-right" ng-mousedown="remove($index,$event)">
+                  <span  class="btn-right" ng-mousedown="appCtrl.remove($index,$event)">
                     <button class="btn btn-xs btn-warning">
                       <span class="glyphicon glyphicon-trash"></span>
                     </button>                  
@@ -54,7 +55,7 @@
                 <div class="checkbox">
                   
                   <label>
-                    <input type="checkbox" ng-model="modePath"> Режим построения маршрута
+                    <input type="checkbox" ng-model="appCtrl.modePath"> Режим построения маршрута
                   </label>
                   
                 </div>
@@ -64,7 +65,7 @@
           
         </div>  
         
-        <div map-component class="col-md-9 full-height" data-way-points="wayPoints" data-mode-path="modePath"></div> 
+        <div map-component class="col-md-9 full-height" data-way-points="appCtrl.wayPoints" data-mode-path="appCtrl.modePath"></div> 
     </div>                                                                                        
   </div>  
 </body>

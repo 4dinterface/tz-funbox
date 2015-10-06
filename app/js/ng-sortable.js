@@ -23,10 +23,13 @@ var NgSortable = (function () {
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
     this.document = angular.element(document);
+    this.controllerAs = "sortableController";
   }
 
   /**
-   * системный callback 
+   * системный callback
+   * здеь инициалиируется приватный api компонента
+   *
    * @param $scope
    * @param element
    * @param attr   
@@ -38,6 +41,45 @@ var NgSortable = (function () {
       this.$scope = $scope;
       this.element = element;
       element.on("mousedown", this.onMouseDown.bind(this));
+      console.log("zzzz", angular.expando.expando, element.data);
+    }
+
+    /**
+     * контроллёр директивы
+     * здесь опишем внешний api копонента 
+     * @param $scope
+     * @param element
+     * @param attr  
+     */
+  }, {
+    key: "controller",
+    value: function controller(privateAPI, $scope, element) {
+      this.rrr = 100;
+    }
+
+    /**
+     * создаёт placeholder
+     * @param rect
+     */
+  }, {
+    key: "initPlaceHolder",
+    value: function initPlaceHolder(rect) {
+      if (this.placeholder) this.placeholder.remove();
+      this.placeholder = this.ddElement.clone();
+      this.placeholder.css("opacity", 0);
+
+      this.ddElement.css({
+        "position": "absolute",
+        "left": rect.left + "px",
+        "top": rect.top - this.parentRect.top + "px",
+        "width": rect.width + "px",
+        "height": rect.height + "px",
+        "z-index": 1,
+        "cursor": "move"
+      });
+
+      this.ddElement.before(this.placeholder); //this.ddElement[0].parentNode.insertBefore(this.placeholder[0], this.ddElement[0])
+      return this.placeholder;
     }
 
     /**
@@ -54,23 +96,9 @@ var NgSortable = (function () {
       this.parentRect = this.ddElement.parent()[0].getBoundingClientRect();
       rect = this.ddElement[0].getBoundingClientRect();
 
-      if (this.placeholder) this.placeholder.remove();
-      this.placeholder = this.ddElement.clone();
-      this.placeholder.css("opacity", 0);
-      this.ddElement.before(this.placeholder); //this.ddElement[0].parentNode.insertBefore(this.placeholder[0], this.ddElement[0])
-
-      this.ddElement.css({
-        "position": "absolute",
-        "left": rect.left + "px",
-        "top": rect.top - this.parentRect.top + "px",
-        "width": rect.width + "px",
-        "height": rect.height + "px",
-        "z-index": 100,
-        "cursor": "move"
-      });
-
       this.offsetY = rect.top - e.clientY - this.parentRect.top;
-      //console.log(rect.top,e.clientY,offsetY,pp.top);
+
+      this.initPlaceHolder(rect);
 
       this.items = this.getChildren(this.ddElement);
       this.document.on("mousemove", this.onMouseMove);
@@ -120,6 +148,8 @@ var NgSortable = (function () {
      * @param e
      */
     value: function onMouseMove(e) {
+      if (!this.items) return;
+
       var posY = e.clientY,
           //this.ddElement.position().top+this.ddElement.height()/2,
       target = this.items.find(function (el) {
@@ -175,6 +205,11 @@ var NgSortable = (function () {
 
       var instance = new (_bind.apply(NgSortable, [null].concat(args)))();
       instance.link = NgSortable.prototype.link ? NgSortable.prototype.link.bind(instance) : instance.link;
+
+      var controller = instance.controller;
+      instance.controller = ['$scope', '$element', function ($scope, $element) {
+        return new controller(instance, $scope, $element);
+      }];
       return instance;
     }
   }]);
