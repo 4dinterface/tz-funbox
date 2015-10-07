@@ -20,6 +20,7 @@ var NgSortable = (function () {
     this.scope = {
       ngSortable: "="
     };
+
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
     this.document = angular.element(document);
@@ -32,6 +33,7 @@ var NgSortable = (function () {
    *
    * @param $scope
    * @param element
+   * @param element
    * @param attr   
    */
 
@@ -41,7 +43,6 @@ var NgSortable = (function () {
       this.$scope = $scope;
       this.element = element;
       element.on("mousedown", this.onMouseDown.bind(this));
-      console.log("zzzz", angular.expando.expando, element.data);
     }
 
     /**
@@ -53,9 +54,7 @@ var NgSortable = (function () {
      */
   }, {
     key: "controller",
-    value: function controller(privateAPI, $scope, element) {
-      this.rrr = 100;
-    }
+    value: function controller(privateAPI, $scope, element) {}
 
     /**
      * создаёт placeholder

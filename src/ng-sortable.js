@@ -34,7 +34,8 @@ class NgSortable {
   constructor() {
     this.scope = {
       ngSortable: "=",
-    }
+    };
+    
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
     this.document = angular.element(document);
@@ -47,13 +48,13 @@ class NgSortable {
    *
    * @param $scope
    * @param element
+   * @param element
    * @param attr   
    */
   link($scope, element, attr) {
     this.$scope = $scope;
     this.element = element;
-    element.on("mousedown", this.onMouseDown.bind(this));    
-    console.log("zzzz",angular.expando .expando,element.data);
+    element.on("mousedown", this.onMouseDown.bind(this));        
   }
   
   
@@ -66,7 +67,6 @@ class NgSortable {
    * @param attr  
    */
   controller(privateAPI, $scope, element){
-    this.rrr=100;
   }
     
   
