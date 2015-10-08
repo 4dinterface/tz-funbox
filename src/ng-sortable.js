@@ -1,5 +1,17 @@
 "use strict"
 
+/**
+ * @ngdoc directive
+ * @name NgSortable
+ *
+ * @description
+ * директива обеспечивает сортировку данных, но не перемещает элементы самостоятельно
+ *
+ * @element UL
+ * @priority 0
+ * @param {array} ngSortable - данные подлежищае сортировки 
+ */
+
 class NgSortable {
 
   /** смещение по клику мыши + позиция контейнера **/
@@ -29,7 +41,7 @@ class NgSortable {
   /**
    * конструктор
    * вызывается фабрикой в момент создания экземпляра компонента
-   * @param ...args -зависимости
+   * @param ...args зависимости
    */
   constructor() {
     this.scope = {
@@ -55,19 +67,7 @@ class NgSortable {
     this.$scope = $scope;
     this.element = element;
     element.on("mousedown", this.onMouseDown.bind(this));        
-  }
-  
-  
-  
-  /**
-   * контроллёр директивы
-   * здесь опишем внешний api копонента 
-   * @param $scope
-   * @param element
-   * @param attr  
-   */
-  controller(privateAPI, $scope, element){
-  }
+  }  
     
   
   /**
@@ -177,6 +177,7 @@ class NgSortable {
   /**
    * возвращает все dom элементы подлежащие перетаскиванию
    * @param e
+   * @returns {array}   
    */
   getChildren(item) {
     var arr = [],
@@ -199,11 +200,6 @@ class NgSortable {
   static factory(...args) {
     var instance = new NgSortable(...args);
     instance.link = NgSortable.prototype.link ? NgSortable.prototype.link.bind(instance) : instance.link;
-    
-    var controller=instance.controller;
-    instance.controller=['$scope', '$element', function($scope, $element){
-      return new controller(instance, $scope, $element);
-    }]
     return instance;
   }
 }

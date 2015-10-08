@@ -36,7 +36,7 @@
           <div class="row left-panel-content">
             <div class="col-md-12">
               <ul class="list-group" id="address-list" ng-sortable="appCtrl.wayPoints">
-                <li class="list-group-item clearfix"  ng-class="{'alert alert-danger': !point.goodAddress}"  ng-repeat="point in appCtrl.wayPoints track by $index" index="{{$index}}" > 
+                <li class="list-group-item clearfix" ng-repeat="point in appCtrl.wayPoints track by $index" index="{{$index}}" > 
                   <div style="padding-right:40px;"> {{point.address}} </div>
                   
                   <span  class="btn-right" ng-mousedown="appCtrl.remove($index,$event)">
@@ -48,20 +48,6 @@
                 </li>                                                                                               
               </ul>
             </div>
-          </div>
-          
-          <div class="row left-panel-bottom">                  
-            <div class="form-group">
-              <div class="col-sm-12">
-                <div class="checkbox">
-                  
-                  <label>
-                    <input type="checkbox" ng-model="appCtrl.modePath"> Режим построения маршрута
-                  </label>
-                  
-                </div>
-              </div>
-            </div> 
           </div>
           
         </div>  

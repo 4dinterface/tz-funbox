@@ -20,11 +20,6 @@ html,body{
   height: 100%;      
   overflow-y: auto;      
 }
-    
-.left-panel-bottom{
-  position:absolute;
-  bottom:0px;
-}
 
 .btn-right{
   display:block;

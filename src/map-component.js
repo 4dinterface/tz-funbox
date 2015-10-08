@@ -1,5 +1,18 @@
 "use strict"
 
+/**
+ * @ngdoc directive
+ * @name mapComponent
+ *
+ * @description
+ * карта и путь
+ *
+ * @element DIV
+ * @priority 0
+ * @param {array} wayPoints 
+ * @param {array} center
+ */
+
 class MapComponent {
 
   constructor() {
@@ -7,7 +20,7 @@ class MapComponent {
 
     this.scope = {
       wayPoints: "=",
-      modePath: "="
+      center:"="
     }
 
     this.onDragEndWayPoint = this.onDragEndWayPoint.bind(this)
@@ -21,6 +34,9 @@ class MapComponent {
    */
   link($scope, element, attr) {
     this.$scope = $scope;
+    
+    //default value
+    this.$scope.center=this.$scope.center||[55.56, 37.76];    
 
     //сгенерируем id если он не указан в шаблоне
     this.id = attr.id || "map-component-" + (MapComponent.idCount++);
@@ -38,41 +54,59 @@ class MapComponent {
   onYandexMapReady() {
     //create map
     this.map = new ymaps.Map(this.id, {
-      center: [55.56, 37.76],
+      center: this.$scope.center,
       zoom: 7
     });
-
+    
     //create point collection
     this.collection = new ymaps.GeoObjectCollection({}, {
-      draggable: true // и их можно перемещать
+      draggable: true // обьекты можно перемещать
     });
-    this.map.geoObjects.add(this.collection);
-
-
+    
+    this.map.geoObjects.add(this.collection);    
     this.$scope.$watch("wayPoints", this.update.bind(this), true);
     this.$scope.$watch("modePath", this.render.bind(this));
+    
+    //set center
+    this.$scope.$watch("center", this.onChangeCenter.bind(this) );
+    this.map.events.add('boundschange', this.onBoundChange.bind(this) );
   }
-
+  
+  /**
+   * обработчик изменения center в ысщзу
+   * позволяет устанавливать центр из вне
+   */
+  onChangeCenter(){
+    if(this.boundChange) return this.boundChange=false;    
+    this.map.setCenter(this.$scope.center)  
+  }
+  
+  /**
+   * обработчик перемещения карты
+   * устанавливает центр
+   */
+  onBoundChange(e){        
+    var newCenter=e.originalEvent.newCenter;
+    this.$scope.$apply(()=>{
+      this.boundChange=true;
+      this.$scope.center = newCenter; 
+    });    
+  }  
+  
   /**
    * обработик события dragend на placeholder
    */
   onDragEndWayPoint(e) {
     var target = e.originalEvent.target,
-      pos = this.collection.indexOf(target),
-      coordinates = target.geometry.getCoordinates();
+        pos = this.collection.indexOf(target),
+        coordinates = target.geometry.getCoordinates();
 
-    ymaps.geocode(coordinates, {
-      results: 1
-    }).then((res) => {
-      var obj = res.geoObjects.get(0),
-        detail = obj.properties.get('metaDataProperty').GeocoderMetaData;
-
-      this.$scope.$apply(() => {
-        this.$scope.wayPoints[pos].coordinates = coordinates;
-        this.$scope.wayPoints[pos].address = detail.text;
-      });
+    this.$scope.$apply(() => {
+      this.$scope.wayPoints[pos].coordinates = coordinates;      
     });
+    
   }
+  
 
   /**
    * обновляет карту
@@ -80,43 +114,25 @@ class MapComponent {
    * @param old - waayPoints после изменения   
    * @returns {MapComponent}
    */
-  update(actual, old) {
-    if (old && actual.length > old.length) {
-      ymaps.geocode(actual[actual.length - 1].address, {
-        results: 1
-      }).then((res) => {
-        if (!res || !res.geoObjects.get(0)) return;
-        var coord = res.geoObjects.get(0).geometry.getCoordinates();
-
-        this.$scope.$apply(() => {
-          this.map.setCenter(coord);
-          actual[actual.length - 1].coordinates = coord;
-          actual[actual.length - 1].goodAddress = true;
-        });
-      })
-    } else {
-      this.render(actual);
-    }
+  update(actual, old) { 
+    //установим координаты новым точкам
+    this.$scope.wayPoints.forEach((wayPoint)=>{
+      wayPoint.coordinates=wayPoint.coordinates||this.$scope.center 
+    })    
+    this.render();
   }
-
+  
   /**
    * перерисовывает геообьекты   
    */
   render() {
-    var wayPoints = this.$scope.wayPoints.filter((point) => point.coordinates),
-      coordinates = wayPoints.map((item) => item.coordinates);
+    var coordinates = this.$scope.wayPoints.map((item) => item.coordinates);
 
     if (this.polyline) this.map.geoObjects.remove(this.polyline);
-    if (this.path) this.map.geoObjects.remove(this.path);
-    if (this.collection) this.collection.removeAll();
+    if (this.collection) this.collection.removeAll();    
 
-    this.renderPoints(wayPoints);
-
-    //путь или линия рисуются только в случае если все точки найдены
-    if (this.$scope.wayPoints.length == wayPoints.length) {
-      if (this.$scope.modePath) this.renderRoute(wayPoints, coordinates)
-      else this.renderPolyline(wayPoints, coordinates);
-    }
+    this.renderPoints(this.$scope.wayPoints);    
+    this.renderPolyline(coordinates);
   }
   
   /**
@@ -137,9 +153,9 @@ class MapComponent {
   
   /**
    * отрисовывает ломаные
-   * @param wayPoints - массмив точек
+   * @param coordinates - массив точек
    */
-  renderPolyline(wayPoints, coordinates) {
+  renderPolyline(coordinates) {
     this.polyline = new ymaps.Polyline(coordinates);
     this.polyline.options.set({
         strokeColor: '#0000FF',
@@ -147,24 +163,7 @@ class MapComponent {
         opacity: 0.5
       }); 
     this.map.geoObjects.add(this.polyline);
-  }
-
-  /**
-   * отрисовывает путь
-   * @param wayPoints - массмив точек
-   * @param coordinates - массив координат  
-   */
-  renderRoute(wayPoints, coordinates) {
-    ymaps.route(coordinates).then((route) => {
-      this.path = route.getPaths();
-
-      this.path.options.set({
-        strokeColor: '#00FF00',
-        strokeWidth: 2
-      });
-      this.map.geoObjects.add(this.path);
-    });
-  }
+  }  
 
   /**
    * Фабрика компонента

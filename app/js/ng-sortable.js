@@ -1,5 +1,17 @@
 "use strict";
 
+/**
+ * @ngdoc directive
+ * @name NgSortable
+ *
+ * @description
+ * директива обеспечивает сортировку данных, но не перемещает элементы самостоятельно
+ *
+ * @element UL
+ * @priority 0
+ * @param {array} ngSortable - данные подлежищае сортировки 
+ */
+
 var _bind = Function.prototype.bind;
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
@@ -11,7 +23,7 @@ var NgSortable = (function () {
   /**
    * конструктор
    * вызывается фабрикой в момент создания экземпляра компонента
-   * @param ...args -зависимости
+   * @param ...args зависимости
    */
 
   function NgSortable() {
@@ -44,17 +56,6 @@ var NgSortable = (function () {
       this.element = element;
       element.on("mousedown", this.onMouseDown.bind(this));
     }
-
-    /**
-     * контроллёр директивы
-     * здесь опишем внешний api копонента 
-     * @param $scope
-     * @param element
-     * @param attr  
-     */
-  }, {
-    key: "controller",
-    value: function controller(privateAPI, $scope, element) {}
 
     /**
      * создаёт placeholder
@@ -177,6 +178,7 @@ var NgSortable = (function () {
     /**
      * возвращает все dom элементы подлежащие перетаскиванию
      * @param e
+     * @returns {array}   
      */
     value: function getChildren(item) {
       var arr = [],
@@ -204,11 +206,6 @@ var NgSortable = (function () {
 
       var instance = new (_bind.apply(NgSortable, [null].concat(args)))();
       instance.link = NgSortable.prototype.link ? NgSortable.prototype.link.bind(instance) : instance.link;
-
-      var controller = instance.controller;
-      instance.controller = ['$scope', '$element', function ($scope, $element) {
-        return new controller(instance, $scope, $element);
-      }];
       return instance;
     }
   }]);
