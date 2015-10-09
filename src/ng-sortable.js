@@ -46,6 +46,8 @@ class NgSortable {
   constructor() {
     this.scope = {
       ngSortable: "=",
+      autosort:"@",
+      onSort:"&"
     };
     
     this.onMouseMove = this.onMouseMove.bind(this);
@@ -135,14 +137,26 @@ class NgSortable {
     })
 
     this.placeholder.remove();
+    
+         
     this.$scope.$apply(() => {
       var srcPos = Number(this.ddElement.attr("index")),
-        removePos = srcPos > this.insertPos ? srcPos + 1 : srcPos;
-
-      this.$scope.ngSortable.splice(this.insertPos, 0, this.$scope.ngSortable[srcPos]);
-      this.$scope.ngSortable.splice(removePos, 1);
-    });
-
+          removePos = srcPos > this.insertPos ? srcPos + 1 : srcPos;
+      
+      //режим самостоятельной сортировки
+      if(this.$scope.autosort!=="false"){       
+        this.$scope.ngSortable.splice(this.insertPos, 0, this.$scope.ngSortable[srcPos]);
+        this.$scope.ngSortable.splice(removePos, 1);        
+      };
+      
+      this.$scope.onSort({
+        oldIndex: srcPos,
+        index:this.insertPos,
+        removeIndex:removePos
+      })
+      
+    });    
+    
     this.placeholder = null;
     this.ddElement = null;
   };
@@ -155,9 +169,9 @@ class NgSortable {
     if(!this.items) return;
     
     var posY = e.clientY, //this.ddElement.position().top+this.ddElement.height()/2,
-      target = this.items.find((el) => el.rect.top < posY && el.rect.top + el.rect.height > posY),
-      i = this.items.length - 1,
-      el;
+        target = this.items.find((el) => el.rect.top < posY && el.rect.top + el.rect.height > posY),
+        i = this.items.length - 1,
+        el;
 
     this.ddElement.css("top", (e.clientY + this.offsetY) + "px");
 
@@ -184,6 +198,7 @@ class NgSortable {
       children = this.element.children("li");
 
     for (let i = 0; i < children.length; i++)
+      
       if (item[0] !== children[i]) arr.push({
         el: children[i],
         rect: children[i].getBoundingClientRect()
@@ -202,6 +217,7 @@ class NgSortable {
     instance.link = NgSortable.prototype.link ? NgSortable.prototype.link.bind(instance) : instance.link;
     return instance;
   }
+  
 }
 
 NgSortable.factory.$inject = [];

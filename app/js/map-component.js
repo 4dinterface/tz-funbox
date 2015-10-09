@@ -20,42 +20,46 @@ var _createClass = (function () { function defineProperties(target, props) { for
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var MapComponent = (function () {
-  function MapComponent() {
+  function MapComponent(mapManager) {
     _classCallCheck(this, MapComponent);
 
     MapComponent.idCount = MapComponent.idCount || 0;
-
-    this.scope = {
-      wayPoints: "=",
-      center: "="
-    };
+    this.scope = {};
 
     this.onDragEndWayPoint = this.onDragEndWayPoint.bind(this);
+    this.mapManager = mapManager;
   }
 
   /**
    * системный callback 
+   * нужно зарегистрироватьinstance с именем взятым из id до срабатывания контролёра
    * @param $scope
    * @param element
    * @param attr   
    */
 
   _createClass(MapComponent, [{
-    key: "link",
-    value: function link($scope, element, attr) {
-      this.$scope = $scope;
+    key: "compile",
+    value: function compile($element, attr) {
+      var _this = this;
 
-      //default value
-      this.$scope.center = this.$scope.center || [55.56, 37.76];
+      this.id = attr.id;
 
-      //сгенерируем id если он не указан в шаблоне
-      this.id = attr.id || "map-component-" + MapComponent.idCount++;
-      if (!attr.id) {
-        element.attr("id", this.id);
-        element[0].setAttribute("id", this.id); //сработает синхронно, в отличии от element.attr срабатывающегот асинхронно      
+      //сгенерируем id если он не указан в шаблоне   
+      if (!this.id) {
+        this.id = "map-component-" + MapComponent.idCount++;
+        $element.attr("id", this.id);
       }
+      this.mapService = this.mapManager.registerInstance(this.id, this);
 
-      ymaps.ready(this.onYandexMapReady.bind(this)); //инициализируем карту          
+      return {
+        pre: function pre($scope) {
+          _this.$scope = $scope;
+          _this.$scope.center = _this.mapService.center;
+          _this.$scope.wayPoints = _this.mapService.wayPoints;
+          ymaps.ready(_this.onYandexMapReady.bind(_this)); //инициализируем карту          
+        }
+      };
     }
 
     /**
@@ -102,12 +106,13 @@ var MapComponent = (function () {
   }, {
     key: "onBoundChange",
     value: function onBoundChange(e) {
-      var _this = this;
+      var _this2 = this;
 
       var newCenter = e.originalEvent.newCenter;
       this.$scope.$apply(function () {
-        _this.boundChange = true;
-        _this.$scope.center = newCenter;
+        _this2.boundChange = true;
+        _this2.$scope.center[0] = newCenter[0];
+        _this2.$scope.center[1] = newCenter[1];
       });
     }
 
@@ -117,14 +122,14 @@ var MapComponent = (function () {
   }, {
     key: "onDragEndWayPoint",
     value: function onDragEndWayPoint(e) {
-      var _this2 = this;
+      var _this3 = this;
 
       var target = e.originalEvent.target,
           pos = this.collection.indexOf(target),
           coordinates = target.geometry.getCoordinates();
 
       this.$scope.$apply(function () {
-        _this2.$scope.wayPoints[pos].coordinates = coordinates;
+        _this3.$scope.wayPoints[pos].coordinates = coordinates;
       });
     }
 
@@ -137,12 +142,6 @@ var MapComponent = (function () {
   }, {
     key: "update",
     value: function update(actual, old) {
-      var _this3 = this;
-
-      //установим координаты новым точкам
-      this.$scope.wayPoints.forEach(function (wayPoint) {
-        wayPoint.coordinates = wayPoint.coordinates || _this3.$scope.center;
-      });
       this.render();
     }
 
@@ -218,6 +217,101 @@ var MapComponent = (function () {
   return MapComponent;
 })();
 
-MapComponent.factory.$inject = [];
-angular.module("mapComponent", []).directive("mapComponent", MapComponent.factory);
+var MapService = (function () {
+
+  /**
+   * конструктор сервиса
+   * @param directiveInstance
+   */
+
+  function MapService(directiveInstance) {
+    _classCallCheck(this, MapService);
+
+    this.wayPoints = [];
+    this.center = [55.56, 37.76];
+    this._instance = directiveInstance;
+  }
+
+  /** 
+   * Добавляет точку 
+   * @param {string}
+   **/
+
+  _createClass(MapService, [{
+    key: "pushPoint",
+    value: function pushPoint(name) {
+      this.wayPoints.push({
+        address: name,
+        coordinates: [this.center[0], this.center[1]]
+      });
+    }
+
+    /** 
+     * удаляет точку 
+     * @param {number} index
+     **/
+  }, {
+    key: "removePoint",
+    value: function removePoint(index) {
+      this.wayPoints.splice(index, 1);
+    }
+
+    /** 
+     * перемещает точку со старого индекса на новый
+     * @param {number} oldPos текущий индекс точки
+     * @param {number} newPos индекс для вставки
+     */
+  }, {
+    key: "movePointToIndex",
+    value: function movePointToIndex(oldPos, newPos) {
+      var removePos = oldPos > newPos ? oldPos + 1 : oldPos;
+      this.wayPoints.splice(newPos, 0, this.wayPoints[oldPos]);
+      this.wayPoints.splice(removePos, 1);
+    }
+  }, {
+    key: "setCenter",
+    value: function setCenter(center) {
+      this.center[0] = center[0];
+      this.center[1] = center[1];
+    }
+  }]);
+
+  return MapService;
+})();
+
+MapComponent.factory.$inject = ["mapManager"];
+
+angular.module("mapComponent", []).directive("mapComponent", MapComponent.factory)
+
+/** фабрика сервисов */
+.factory('mapManager', function () {
+  var services = {};
+
+  function registerInstance(name, directiveInstance) {
+    if (!name || !directiveInstance) throw "некорректная регистрация";
+    services[name] = new MapService(directiveInstance);
+    return services[name];
+  };
+
+  function unregisterInstance(name) {
+    delete services[name];
+  };
+
+  function getServiceByName(name) {
+    if (!(name in services)) {
+      throw "нет сервиса с именем: " + name;
+    }
+    return services[name];
+  };
+
+  return {
+    registerInstance: registerInstance,
+    unregisterInstance: unregisterInstance,
+    getServiceByName: getServiceByName
+  };
+});
+
+/* точки пути */
+
+/* инстанс директивы */
 //# sourceMappingURL=map-component.js.map

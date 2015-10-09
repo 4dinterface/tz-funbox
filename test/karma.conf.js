@@ -7,7 +7,8 @@ module.exports = function(config){
       'app/bower_components/angular/angular.js',
       'app/bower_components/angular-mocks/angular-mocks.js',
       'app/js/**/*.js',
-      'test/unit/**/*.js'
+      'test/unit/**/*.js',
+      'https://api-maps.yandex.ru/2.1/?lang=ru_RU'
     ],
 
     autoWatch : true,

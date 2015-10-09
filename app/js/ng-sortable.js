@@ -30,7 +30,9 @@ var NgSortable = (function () {
     _classCallCheck(this, NgSortable);
 
     this.scope = {
-      ngSortable: "="
+      ngSortable: "=",
+      autosort: "@",
+      onSort: "&"
     };
 
     this.onMouseMove = this.onMouseMove.bind(this);
@@ -129,12 +131,22 @@ var NgSortable = (function () {
       });
 
       this.placeholder.remove();
+
       this.$scope.$apply(function () {
         var srcPos = Number(_this.ddElement.attr("index")),
             removePos = srcPos > _this.insertPos ? srcPos + 1 : srcPos;
 
-        _this.$scope.ngSortable.splice(_this.insertPos, 0, _this.$scope.ngSortable[srcPos]);
-        _this.$scope.ngSortable.splice(removePos, 1);
+        //режим самостоятельной сортировки
+        if (_this.$scope.autosort !== "false") {
+          _this.$scope.ngSortable.splice(_this.insertPos, 0, _this.$scope.ngSortable[srcPos]);
+          _this.$scope.ngSortable.splice(removePos, 1);
+        };
+
+        _this.$scope.onSort({
+          oldIndex: srcPos,
+          index: _this.insertPos,
+          removeIndex: removePos
+        });
       });
 
       this.placeholder = null;
@@ -185,6 +197,7 @@ var NgSortable = (function () {
           children = this.element.children("li");
 
       for (var i = 0; i < children.length; i++) {
+
         if (item[0] !== children[i]) arr.push({
           el: children[i],
           rect: children[i].getBoundingClientRect()

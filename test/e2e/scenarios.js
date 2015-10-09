@@ -10,6 +10,7 @@ describe('Demo App', function () {
     });
   }
 
+  //TODO
   var moveIndexToIndex = function (startIndex, endIndex) {
     var items = element.all(by.css("ul > li")),
       el1 = items.get(startIndex),
@@ -32,7 +33,7 @@ describe('Demo App', function () {
   beforeAll(function () {
     browser.get('app/index.html');
     input = element(by.id('address-input'));
-    points = element.all(by.repeater('point in wayPoints').column('point.address'));
+    points = element.all(by.repeater('point in appCtrl.wayPoints').column('point.address'));
   });
 
 

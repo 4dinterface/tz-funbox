@@ -35,7 +35,7 @@
           
           <div class="row left-panel-content">
             <div class="col-md-12">
-              <ul class="list-group" id="address-list" ng-sortable="appCtrl.wayPoints">
+              <ul class="list-group" id="address-list" ng-sortable="appCtrl.wayPoints" autosort="false" on-sort="appCtrl.onSort(oldIndex,index)">
                 <li class="list-group-item clearfix" ng-repeat="point in appCtrl.wayPoints track by $index" index="{{$index}}" > 
                   <div style="padding-right:40px;"> {{point.address}} </div>
                   
@@ -52,7 +52,7 @@
           
         </div>  
         
-        <div map-component class="col-md-9 full-height" data-way-points="appCtrl.wayPoints" data-mode-path="appCtrl.modePath"></div> 
+        <div id="map1" map-component class="col-md-9 full-height" data-way-points="appCtrl.wayPoints" data-mode-path="appCtrl.modePath"></div> 
     </div>                                                                                        
   </div>  
 </body>
