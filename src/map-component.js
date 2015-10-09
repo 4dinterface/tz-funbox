@@ -39,15 +39,22 @@ class MapComponent {
       $element.attr("id",this.id);            
     }
     this.mapService=this.mapManager.registerInstance(this.id,this);
+
         
     return {
       pre:($scope)=>  {
         this.$scope = $scope;
         this.$scope.center = this.mapService.center;
         this.$scope.wayPoints = this.mapService.wayPoints;
-        ymaps.ready(this.onYandexMapReady.bind(this)); //инициализируем карту            
+        ymaps.ready(this.onYandexMapReady.bind(this)); //инициализируем карту
+
+        //удалим сервис если удаляется директива
+        this.scope.$on('$destroy', ()=>{
+          this.mapManager.unregisterInstance(this.id);
+        });
       }           
-    }  
+    }
+
   }
 
 
@@ -241,10 +248,19 @@ class MapService {
 
 MapComponent.factory.$inject = ["mapManager"];
 
+
+
 angular.module("mapComponent", [])
   .directive("mapComponent", MapComponent.factory)
- 
-  /** фабрика сервисов */
+
+  /**
+   * @ngdoc service
+   * @name mapManager
+   *
+
+   * @description
+   * Менеджер серивисов обеспечивает регистрацию, получение и удаление сервисов директив
+   */
   .factory('mapManager', function () {
     var services = {};
 
@@ -269,5 +285,6 @@ angular.module("mapComponent", [])
       registerInstance: registerInstance,
       unregisterInstance: unregisterInstance,
       getServiceByName: getServiceByName
-    }    
+    }
+
   })
