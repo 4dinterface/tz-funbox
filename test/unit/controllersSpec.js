@@ -5,14 +5,6 @@ describe('AppController', function() {
   
   beforeEach(module('mapApp'));
 
-  //var $controller;
-  //var $rootScope;  
-  /*beforeEach(inject(function(_$rootScope_,_$controller_){    
-    $controller = _$controller_;
-    $rootScope=_$rootScope_;
-  }));*/
-  
-  
    it('add empty string', inject(function($controller) {
     var scope = {},
         ctrl = $controller('AppCtrl', {$scope:scope});

@@ -6,9 +6,6 @@ app.controller('AppCtrl', function ($scope) {
   /** точки маршрута **/
   this.wayPoints = [];
   
-  /** активность режима пути **/
-  this.modePath = false;  
-  
   /**
    * добавит точку маршруту 
    * @param {string} value - аддресс точки маршрута

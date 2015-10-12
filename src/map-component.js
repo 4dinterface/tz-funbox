@@ -65,7 +65,6 @@ class MapComponent {
     
     this.map.geoObjects.add(this.collection);    
     this.$scope.$watch("wayPoints", this.update.bind(this), true);
-    this.$scope.$watch("modePath", this.render.bind(this));
     
     //set center
     this.$scope.$watch("center", this.onChangeCenter.bind(this) );
@@ -77,19 +76,20 @@ class MapComponent {
    * позволяет устанавливать центр из вне
    */
   onChangeCenter(){
-    if(this.boundChange) return this.boundChange=false;    
+    if(this.boundChange) return this.boundChange=false;
     this.map.setCenter(this.$scope.center)  
   }
   
   /**
    * обработчик перемещения карты
-   * устанавливает центр
+   * устанавливает центр в scope
    */
   onBoundChange(e){        
     var newCenter=e.originalEvent.newCenter;
     this.$scope.$apply(()=>{
       this.boundChange=true;
-      this.$scope.center = newCenter; 
+      this.$scope.center[0] = newCenter[0];
+      this.$scope.center[1] = newCenter[1];
     });    
   }  
   
@@ -98,11 +98,11 @@ class MapComponent {
    */
   onDragEndWayPoint(e) {
     var target = e.originalEvent.target,
-        pos = this.collection.indexOf(target),
+        index = this.collection.indexOf(target),
         coordinates = target.geometry.getCoordinates();
 
     this.$scope.$apply(() => {
-      this.$scope.wayPoints[pos].coordinates = coordinates;      
+      this.$scope.wayPoints[index].coordinates = coordinates;
     });
     
   }
@@ -117,7 +117,7 @@ class MapComponent {
   update(actual, old) { 
     //установим координаты новым точкам
     this.$scope.wayPoints.forEach((wayPoint)=>{
-      wayPoint.coordinates=wayPoint.coordinates||this.$scope.center 
+      wayPoint.coordinates=wayPoint.coordinates||this.$scope.center.slice(0)
     })    
     this.render();
   }

@@ -12,8 +12,8 @@ describe('Demo App', function () {
 
   var moveIndexToIndex = function (startIndex, endIndex) {
     var items = element.all(by.css("ul > li")),
-      el1 = items.get(startIndex),
-      el2 = items.get(endIndex);
+        el1 = items.get(startIndex),
+        el2 = items.get(endIndex);
 
     browser.actions()
       .mouseMove(el1, {
@@ -32,7 +32,7 @@ describe('Demo App', function () {
   beforeAll(function () {
     browser.get('app/index.html');
     input = element(by.id('address-input'));
-    points = element.all(by.repeater('point in wayPoints').column('point.address'));
+    points = element.all(by.repeater('point in appCtrl.wayPoints').column('point.address'));
   });
 
 

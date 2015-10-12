@@ -77,7 +77,6 @@ var MapComponent = (function () {
 
       this.map.geoObjects.add(this.collection);
       this.$scope.$watch("wayPoints", this.update.bind(this), true);
-      this.$scope.$watch("modePath", this.render.bind(this));
 
       //set center
       this.$scope.$watch("center", this.onChangeCenter.bind(this));
@@ -97,7 +96,7 @@ var MapComponent = (function () {
 
     /**
      * обработчик перемещения карты
-     * устанавливает центр
+     * устанавливает центр в scope
      */
   }, {
     key: "onBoundChange",
@@ -107,7 +106,8 @@ var MapComponent = (function () {
       var newCenter = e.originalEvent.newCenter;
       this.$scope.$apply(function () {
         _this.boundChange = true;
-        _this.$scope.center = newCenter;
+        _this.$scope.center[0] = newCenter[0];
+        _this.$scope.center[1] = newCenter[1];
       });
     }
 
@@ -120,11 +120,11 @@ var MapComponent = (function () {
       var _this2 = this;
 
       var target = e.originalEvent.target,
-          pos = this.collection.indexOf(target),
+          index = this.collection.indexOf(target),
           coordinates = target.geometry.getCoordinates();
 
       this.$scope.$apply(function () {
-        _this2.$scope.wayPoints[pos].coordinates = coordinates;
+        _this2.$scope.wayPoints[index].coordinates = coordinates;
       });
     }
 
@@ -141,7 +141,7 @@ var MapComponent = (function () {
 
       //установим координаты новым точкам
       this.$scope.wayPoints.forEach(function (wayPoint) {
-        wayPoint.coordinates = wayPoint.coordinates || _this3.$scope.center;
+        wayPoint.coordinates = wayPoint.coordinates || _this3.$scope.center.slice(0);
       });
       this.render();
     }

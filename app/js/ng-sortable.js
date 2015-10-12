@@ -36,7 +36,6 @@ var NgSortable = (function () {
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
     this.document = angular.element(document);
-    this.controllerAs = "sortableController";
   }
 
   /**
@@ -58,47 +57,22 @@ var NgSortable = (function () {
     }
 
     /**
-     * создаёт placeholder
-     * @param rect
-     */
-  }, {
-    key: "initPlaceHolder",
-    value: function initPlaceHolder(rect) {
-      if (this.placeholder) this.placeholder.remove();
-      this.placeholder = this.ddElement.clone();
-      this.placeholder.css("opacity", 0);
-
-      this.ddElement.css({
-        "position": "absolute",
-        "left": rect.left + "px",
-        "top": rect.top - this.parentRect.top + "px",
-        "width": rect.width + "px",
-        "height": rect.height + "px",
-        "z-index": 1,
-        "cursor": "move"
-      });
-
-      this.ddElement.before(this.placeholder); //this.ddElement[0].parentNode.insertBefore(this.placeholder[0], this.ddElement[0])
-      return this.placeholder;
-    }
-
-    /**
      * обработчик mousedown на элементе подлежащим перемещению
      * @param e
      */
   }, {
     key: "onMouseDown",
     value: function onMouseDown(e) {
-      var rect;
+      var rect, parentRect;
       this.ddElement = e.target.tagName == "LI" ? angular.element(e.target) : angular.element(e.target).closest("LI", this.element);
       if (!this.ddElement) return;
 
-      this.parentRect = this.ddElement.parent()[0].getBoundingClientRect();
+      parentRect = this.ddElement.parent()[0].getBoundingClientRect();
       rect = this.ddElement[0].getBoundingClientRect();
 
-      this.offsetY = rect.top - e.clientY - this.parentRect.top;
+      this.offsetY = rect.top - e.clientY - parentRect.top;
 
-      this.initPlaceHolder(rect);
+      this.initPlaceHolder(rect, parentRect);
 
       this.items = this.getChildren(this.ddElement);
       this.document.on("mousemove", this.onMouseMove);
@@ -158,28 +132,55 @@ var NgSortable = (function () {
           i = this.items.length - 1,
           el;
 
+      //установим координаты перетаскиваемому обьекту
       this.ddElement.css("top", e.clientY + this.offsetY + "px");
 
+      //установим placeholder
       if (!target || target.el == this.placeholder[0]) return;
 
       if (target.rect.top + target.rect.height / 2 < e.clientY) {
-        target.el.parentNode.insertBefore(this.placeholder[0], target.el);
+        angular.element(target.el).before(this.placeholder[0]); //target.el.parentNode.insertBefore(this.placeholder[0], target.el)
         this.insertPos = Number(target.el.getAttribute("index"));
       } else {
-        target.el.nextSibling.parentNode.insertBefore(this.placeholder[0], target.el.nextSibling);
+        angular.element(target.el).after(this.placeholder[0]); //target.el.nextSibling.parentNode.insertBefore(this.placeholder[0], target.el.nextSibling)
         this.insertPos = Number(target.el.getAttribute("index")) + 1;
       }
 
       this.items = this.getChildren(this.ddElement); //массив children обновляется лишь тогда когда имело место перестановка
     }
   }, {
-    key: "getChildren",
+    key: "initPlaceHolder",
+
+    /**
+     * создаёт placeholder
+     * @param rect
+     */
+    value: function initPlaceHolder(rect, parentRect) {
+      if (this.placeholder) this.placeholder.remove();
+      this.placeholder = this.ddElement.clone();
+      this.placeholder.css("opacity", 0);
+
+      this.ddElement.css({
+        "position": "absolute",
+        "left": rect.left + "px",
+        "top": rect.top - parentRect.top + "px",
+        "width": rect.width + "px",
+        "height": rect.height + "px",
+        "z-index": 1,
+        "cursor": "move"
+      });
+
+      this.ddElement.before(this.placeholder); //this.ddElement[0].parentNode.insertBefore(this.placeholder[0], this.ddElement[0])
+      return this.placeholder;
+    }
 
     /**
      * возвращает все dom элементы подлежащие перетаскиванию
      * @param e
      * @returns {array}   
      */
+  }, {
+    key: "getChildren",
     value: function getChildren(item) {
       var arr = [],
           children = this.element.children("li");
@@ -189,7 +190,8 @@ var NgSortable = (function () {
           el: children[i],
           rect: children[i].getBoundingClientRect()
         });
-      }return arr;
+      }
+      return arr;
     }
 
     /**
