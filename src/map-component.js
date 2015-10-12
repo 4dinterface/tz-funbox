@@ -17,7 +17,7 @@ class MapComponent {
 
   constructor(mapManager) {
     MapComponent.idCount = MapComponent.idCount || 0;
-    this.scope = {}
+    this.scope = {} //в этой версии всё взаимодействие идёт через сервис
 
     this.onDragEndWayPoint = this.onDragEndWayPoint.bind(this);   
     this.mapManager=mapManager;
@@ -38,18 +38,20 @@ class MapComponent {
       this.id="map-component-" + (MapComponent.idCount++);
       $element.attr("id",this.id);            
     }
+    //зарегистрируем instace директивы в менеджере
     this.mapService=this.mapManager.registerInstance(this.id,this);
 
         
     return {
       pre:($scope)=>  {
         this.$scope = $scope;
-        this.$scope.center = this.mapService.center;
-        this.$scope.wayPoints = this.mapService.wayPoints;
+
+        this.mapService.center=this.$scope.center =this.$scope.center||[55.56, 37.76];
+        this.mapService.wayPoints=this.$scope.wayPoints =this.$scope.wayPoints ||[];
         ymaps.ready(this.onYandexMapReady.bind(this)); //инициализируем карту
 
         //удалим сервис если удаляется директива
-        this.scope.$on('$destroy', ()=>{
+        this.$scope.$on('$destroy', ()=>{
           this.mapManager.unregisterInstance(this.id);
         });
       }           
@@ -184,8 +186,10 @@ class MapComponent {
 }
 
 
-
-
+/**
+ * Сервис реализует API директивы
+ *
+ */
 class MapService {
   /* точки пути */
   wayPoints;
@@ -239,10 +243,9 @@ class MapService {
   }
 
   setCenter(center) {
-    this.center[0]=center[0];
-    this.center[1]=center[1];
+    this.center[0] = center[0];
+    this.center[1] = center[1];
   }
-  
 }
 
 
@@ -257,10 +260,10 @@ angular.module("mapComponent", [])
    * @ngdoc service
    * @name mapManager
    *
-
    * @description
    * Менеджер серивисов обеспечивает регистрацию, получение и удаление сервисов директив
    */
+
   .factory('mapManager', function () {
     var services = {};
 
