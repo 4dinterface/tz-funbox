@@ -1,25 +1,28 @@
 describe('MapComponent', function() { 
   var elm, scope, $element, mapService;
 
-  //'beforeEach(module('mapApp'));
   beforeEach(module('mapComponent'));
 
   beforeEach(inject(function($rootScope, $compile,mapManager) {    
     
     elm = angular.element(
-      '<div id="map1" map-component class="col-md-9 full-height" data-way-points="appCtrl.wayPoints" data-mode-path="appCtrl.modePath"></div>'
+      '<div id="map1" map-component class="col-md-9 full-height"></div>'
     );
         
     scope = $rootScope;
     $element=$compile(elm)(scope);
-    mapService = mapManager.getServiceByName("map1");
-    
+
     var isolatedScope=$element.isolateScope();
     scope.$digest();
+
+    mapService = mapManager.getServiceByName("map1");
+
   }));
   
   
   it("add wayPoint",function(){
+
+
     mapService.setCenter([12,12]);
     mapService.pushPoint("москва");
 
