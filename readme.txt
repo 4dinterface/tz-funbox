@@ -1,4 +1,3 @@
-//fix for windows 8
-install -g node-gyp -msvs_version=2012
-npm install -g restify
-webdriver-manager update
+альтернативный взгляд на реализацию задачи.
+
+Api к карте представлен как сервис, все манипуляции с путями реализуются через этот сервис.
