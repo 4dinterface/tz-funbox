@@ -1,8 +1,15 @@
 "use strict";
+var _bind = Function.prototype.bind;
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var mapModule = angular.module("mapComponent", []);
 
 /**
  * @ngdoc directive
- * @name mapComponent
+ * @name *
  *
  * @description
  * карта и путь
@@ -13,18 +20,12 @@
  * @param {array} center
  */
 
-var _bind = Function.prototype.bind;
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 var MapComponent = (function () {
   function MapComponent(mapManager) {
     _classCallCheck(this, MapComponent);
 
     MapComponent.idCount = MapComponent.idCount || 0;
-    this.scope = {};
+    this.scope = {}; //в этой версии всё взаимодействие идёт через сервис
 
     this.onDragEndWayPoint = this.onDragEndWayPoint.bind(this);
     this.mapManager = mapManager;
@@ -50,14 +51,24 @@ var MapComponent = (function () {
         this.id = "map-component-" + MapComponent.idCount++;
         $element.attr("id", this.id);
       }
+      //зарегистрируем instace директивы в менеджере
       this.mapService = this.mapManager.registerInstance(this.id, this);
 
       return {
         pre: function pre($scope) {
           _this.$scope = $scope;
+
+          // за центр и координаты целиком и полностью отвечает сервис,
+          // это позволяет использовать сервис в контролёре приложения не дожидаясь инициализации директивы с картой
           _this.$scope.center = _this.mapService.center;
           _this.$scope.wayPoints = _this.mapService.wayPoints;
-          ymaps.ready(_this.onYandexMapReady.bind(_this)); //инициализируем карту          
+
+          ymaps.ready(_this.onYandexMapReady.bind(_this)); //инициализируем карту
+
+          //удалим сервис если удаляется директива
+          _this.$scope.$on('$destroy', function () {
+            _this.mapManager.unregisterInstance(_this.id);
+          });
         }
       };
     }
@@ -80,8 +91,7 @@ var MapComponent = (function () {
       });
 
       this.map.geoObjects.add(this.collection);
-      this.$scope.$watch("wayPoints", this.update.bind(this), true);
-      this.$scope.$watch("modePath", this.render.bind(this));
+      this.$scope.$watch("wayPoints", this.render.bind(this), true);
 
       //set center
       this.$scope.$watch("center", this.onChangeCenter.bind(this));
@@ -125,24 +135,11 @@ var MapComponent = (function () {
       var _this3 = this;
 
       var target = e.originalEvent.target,
-          pos = this.collection.indexOf(target),
-          coordinates = target.geometry.getCoordinates();
+          index = this.collection.indexOf(target);
 
       this.$scope.$apply(function () {
-        _this3.$scope.wayPoints[pos].coordinates = coordinates;
+        _this3.$scope.wayPoints[index].coordinates = target.geometry.getCoordinates();
       });
-    }
-
-    /**
-     * обновляет карту
-     * @param actual - waayPoints после изменения
-     * @param old - waayPoints после изменения   
-     * @returns {MapComponent}
-     */
-  }, {
-    key: "update",
-    value: function update(actual, old) {
-      this.render();
     }
 
     /**
@@ -170,13 +167,13 @@ var MapComponent = (function () {
     key: "renderPoints",
     value: function renderPoints(wayPoints) {
       for (var i = 0; i < wayPoints.length; i++) {
-        var placeMark = new ymaps.Placemark(wayPoints[i].coordinates, {
+        var placemark = new ymaps.Placemark(wayPoints[i].coordinates, {
           balloonContent: wayPoints[i].address,
           iconContent: i + 1
         });
 
-        placeMark.events.add("dragend", this.onDragEndWayPoint);
-        this.collection.add(placeMark);
+        placemark.events.add("dragend", this.onDragEndWayPoint);
+        this.collection.add(placemark);
       }
     }
 
@@ -217,6 +214,14 @@ var MapComponent = (function () {
   return MapComponent;
 })();
 
+MapComponent.factory.$inject = ["mapManager"];
+mapModule.directive("mapComponent", MapComponent.factory);
+
+/**
+ * Сервис реализует API директивы
+ *
+ */
+
 var MapService = (function () {
 
   /**
@@ -227,10 +232,18 @@ var MapService = (function () {
   function MapService(directiveInstance) {
     _classCallCheck(this, MapService);
 
-    this.wayPoints = [];
-    this.center = [55.56, 37.76];
     this._instance = directiveInstance;
+    this.wayPoints = [];
+    this.center = [55.75, 37.6];
   }
+
+  /**
+   * @ngdoc service
+   * @name mapManager
+   *
+   * @description
+   * Менеджер серивисов обеспечивает регистрацию, получение и удаление сервисов директив
+   */
 
   /** 
    * Добавляет точку 
@@ -242,7 +255,7 @@ var MapService = (function () {
     value: function pushPoint(name) {
       this.wayPoints.push({
         address: name,
-        coordinates: [this.center[0], this.center[1]]
+        coordinates: this.center.splice(0)
       });
     }
 
@@ -279,12 +292,7 @@ var MapService = (function () {
   return MapService;
 })();
 
-MapComponent.factory.$inject = ["mapManager"];
-
-angular.module("mapComponent", []).directive("mapComponent", MapComponent.factory)
-
-/** фабрика сервисов */
-.factory('mapManager', function () {
+mapModule.factory('mapManager', function () {
   var services = {};
 
   function registerInstance(name, directiveInstance) {

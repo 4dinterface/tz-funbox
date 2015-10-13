@@ -1,8 +1,9 @@
 "use strict"
+var mapModule=angular.module("mapComponent", [])
 
 /**
  * @ngdoc directive
- * @name mapComponent
+ * @name *
  *
  * @description
  * карта и путь
@@ -12,9 +13,7 @@
  * @param {array} wayPoints 
  * @param {array} center
  */
-
 class MapComponent {
-
   constructor(mapManager) {
     MapComponent.idCount = MapComponent.idCount || 0;
     this.scope = {} //в этой версии всё взаимодействие идёт через сервис
@@ -22,7 +21,7 @@ class MapComponent {
     this.onDragEndWayPoint = this.onDragEndWayPoint.bind(this);   
     this.mapManager=mapManager;
   }
-  
+
   /**
    * системный callback 
    * нужно зарегистрироватьinstance с именем взятым из id до срабатывания контролёра
@@ -40,14 +39,16 @@ class MapComponent {
     }
     //зарегистрируем instace директивы в менеджере
     this.mapService=this.mapManager.registerInstance(this.id,this);
-
         
     return {
       pre:($scope)=>  {
         this.$scope = $scope;
 
-        this.mapService.center=this.$scope.center =this.$scope.center||[55.56, 37.76];
-        this.mapService.wayPoints=this.$scope.wayPoints =this.$scope.wayPoints ||[];
+        // за центр и координаты целиком и полностью отвечает сервис,
+        // это позволяет использовать сервис в контролёре приложения не дожидаясь инициализации директивы с картой
+        this.$scope.center =this.mapService.center;
+        this.$scope.wayPoints =this.mapService.wayPoints;
+
         ymaps.ready(this.onYandexMapReady.bind(this)); //инициализируем карту
 
         //удалим сервис если удаляется директива
@@ -56,9 +57,7 @@ class MapComponent {
         });
       }           
     }
-
   }
-
 
   /**
    * обработик события готовности yandex map 
@@ -76,8 +75,7 @@ class MapComponent {
     });
 
     this.map.geoObjects.add(this.collection);
-    this.$scope.$watch("wayPoints", this.update.bind(this), true);
-    this.$scope.$watch("modePath", this.render.bind(this));
+    this.$scope.$watch("wayPoints", this.render.bind(this), true);
 
     //set center
     this.$scope.$watch("center", this.onChangeCenter.bind(this));
@@ -111,23 +109,11 @@ class MapComponent {
    */
   onDragEndWayPoint(e) {
     var target = e.originalEvent.target,
-        pos = this.collection.indexOf(target),
-        coordinates = target.geometry.getCoordinates();
+        index = this.collection.indexOf(target);
 
     this.$scope.$apply(() => {
-      this.$scope.wayPoints[pos].coordinates = coordinates;
+      this.$scope.wayPoints[index].coordinates = target.geometry.getCoordinates();
     });
-  }
-
-
-  /**
-   * обновляет карту
-   * @param actual - waayPoints после изменения
-   * @param old - waayPoints после изменения   
-   * @returns {MapComponent}
-   */
-  update(actual, old) {
-    this.render();
   }
 
   /**
@@ -149,13 +135,13 @@ class MapComponent {
    */
   renderPoints(wayPoints) {
     for (let i = 0; i < wayPoints.length; i++) {
-        let placeMark = new ymaps.Placemark(wayPoints[i].coordinates, {
+      let placemark = new ymaps.Placemark(wayPoints[i].coordinates, {
         balloonContent: wayPoints[i].address,
         iconContent: i + 1
       });
 
-      placeMark.events.add("dragend", this.onDragEndWayPoint)
-      this.collection.add(placeMark);
+      placemark.events.add("dragend", this.onDragEndWayPoint)
+      this.collection.add(placemark);
     }
   }
 
@@ -180,10 +166,12 @@ class MapComponent {
    */
   static factory(...args) {
     var instance = new MapComponent(...args);
-    instance.link = MapComponent.prototype.link ? MapComponent.prototype.link.bind(instance) : instance.link;    
+    instance.link = MapComponent.prototype.link ? MapComponent.prototype.link.bind(instance) : instance.link;
     return instance;
   }
 }
+MapComponent.factory.$inject = ["mapManager"];
+mapModule.directive("mapComponent", MapComponent.factory)
 
 
 /**
@@ -204,9 +192,9 @@ class MapService {
    * @param directiveInstance
    */
   constructor(directiveInstance) {
-    this.wayPoints = [];
-    this.center=[55.56, 37.76];
     this._instance = directiveInstance;
+    this.wayPoints=[];
+    this.center=[55.75, 37.6];
   }
 
   /** 
@@ -216,10 +204,7 @@ class MapService {
   pushPoint(name) {
     this.wayPoints.push({
       address:name,
-      coordinates:[
-        this.center[0],
-        this.center[1]
-      ]
+      coordinates: this.center.splice(0)
     });
   }
 
@@ -249,13 +234,6 @@ class MapService {
 }
 
 
-MapComponent.factory.$inject = ["mapManager"];
-
-
-
-angular.module("mapComponent", [])
-  .directive("mapComponent", MapComponent.factory)
-
   /**
    * @ngdoc service
    * @name mapManager
@@ -263,8 +241,7 @@ angular.module("mapComponent", [])
    * @description
    * Менеджер серивисов обеспечивает регистрацию, получение и удаление сервисов директив
    */
-
-  .factory('mapManager', function () {
+  mapModule.factory('mapManager', function () {
     var services = {};
 
     function registerInstance(name, directiveInstance) {
@@ -289,5 +266,4 @@ angular.module("mapComponent", [])
       unregisterInstance: unregisterInstance,
       getServiceByName: getServiceByName
     }
-
   })
